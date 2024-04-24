@@ -14,18 +14,19 @@ database.init_app(app)
 from models.user import User
 
 with app.app_context():
-    print(database.engine)
+    database.drop_all()
     database.create_all()
 
 
 @app.route('/read', methods=["POST"])
 def read_xl_file():
     """
-
+    function to read the Excel file rows and columns, validate them and insert them into the database.
     :return:
     """
     library_register = load_workbook("static/Library_register_data.xlsx")
     sheet = library_register.active
+    # counter = 0
 
     # improve this file handling because dumping a larger file into memory... will not be ideal
 
@@ -42,10 +43,17 @@ def read_xl_file():
 
         # check if the row has data
         if row_info:
-            add_person(validate_data(row_info))
+            try:
+                add_person(validate_data(row_info))
+            except ValueError:
+                # counter = counter + 1
+                print("name contains a number ignoring it..." )
+                continue
+
             # debug print
             # print(f"Row to Dict: {validate_data(row_info)}")
             # print("-----------")
+    # print(f"{counter} INVALID NAMES")
 
     users = User.query.all()
     excel_data = []
@@ -56,7 +64,10 @@ def read_xl_file():
     return jsonify({"message": excel_data})
 
 
-def add_person(person):
+def add_person(person: UserValidation):
+    """Add a 'validated' person to the database.
+    :param person A object of userValidation that can be added to the database
+    """
     new_user = User(
         first_name=person.name["first_name"],
         last_name=person.name["last_name"],
@@ -69,9 +80,9 @@ def add_person(person):
 
 def validate_data(row) -> UserValidation:
     """
-
-    :param row:
-    :return:
+    pass the incoming row from the excel off to pydantic user validation/serialisation.
+    :param row: the incoming row to be validated
+    :return: the validated / serialised user.
     """
     user = UserValidation(
         name=row[0],
