@@ -16,14 +16,14 @@ class User(database.Model):
     valid_to = Column(DateTime, nullable=True)
 
     gender = Column(String(1), nullable=True)
-    researcher = Column(Boolean, nullable=True)
+    researcher = Column(Boolean, nullable=False)
 
     def to_dict(self):
         return {
             'first_name': self.first_name,
             'last_name': self.last_name,
             'date_of_birth': self.date_of_birth,
-            'time_in': self.time_in,
+            'time_in': str(self.time_in),
             'membership_no': self.membership_no,
             'valid_from': self.valid_from,
             'valid_to': self.valid_to,
