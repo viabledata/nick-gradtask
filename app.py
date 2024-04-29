@@ -18,49 +18,85 @@ with app.app_context():
     database.create_all()
 
 
-@app.route('/read', methods=["POST"])
+@app.route("/read", methods=["POST"])
 def read_xl_file():
     """
     function to read the Excel file rows and columns, validate them and insert them into the database.
-    :return:
+    :return: (json) message stating how many rows in the Excel have been parsed, or an error message.
     """
     library_register = load_workbook("static/Library_register_data.xlsx")
     sheet = library_register.active
-    # counter = 0
+    row_counter = 0
+    # improve this file handling by using pandas to read the Excel in chunks, to prevent loading all into memory
 
-    # improve this file handling because dumping a larger file into memory... will not be ideal
+    # loop over each row in the Excel file
     for row in range(2, sheet.max_row + 1):
         row_info = []
+        # loop over each column in the Excel file
         for column in range(1, sheet.max_column + 1):
 
+            # check if the cell value is not null and append it to the row
             cell = sheet.cell(row=row, column=column)
             if cell.value is not None:
-
-                # column_name = sheet.cell(row=1, column=column)
-                # print(f"Type: {type(cell.value)} {column_name.value}: {cell.value} |", end=" ")
                 row_info.append(cell.value)
 
-        # check if the row has data
+        # check if the row has data and try to add the 'validated' person to the database
         if row_info:
             try:
                 add_person(validate_data(row_info))
+                row_counter += 1
             except ValueError as error:
-                # counter = counter + 1
-                print(error)
-                continue
+                return jsonify({"error": f"{error}"}), 400
 
-            # debug print
-            # print(f"Row to Dict: {validate_data(row_info)}")
-            # print("-----------")
-    # print(f"{counter} INVALID NAMES")
+    return jsonify({"message": f"{row_counter} users parsed and added to the DB."}), 200
 
+
+@app.route("/get/<name>", methods=["GET"])
+def get_user_by_name(name: str):
+    """
+    get a user's information by searching for their name in the database.
+    :param name: the user's name to get from the database
+    :return: (json) object of the requested user's information.
+    """
+    # improve by allowing for lowercase name search using 'like' instead of just exact case.
+    # split the incoming request into first and last name
+    full_name = name.split(" ")
+    first_name = full_name[0]
+    last_name = full_name[-1]
+
+    user = User()
+
+    # if both first and last name exist try querying the database for both.
+    if first_name and last_name:
+        user = User.query.filter_by(first_name=first_name, last_name=last_name).first()
+
+    # ditto but only with first name
+    if first_name:
+        user = User.query.filter_by(first_name=first_name).first()
+
+    # fall over check to see if the request only contains a last name, before returning 'user not found'
+    if not user:
+        user = User.query.filter_by(last_name=last_name).first()
+
+    if user:
+        return jsonify({"message": user.to_dict()}), 200
+    else:
+        return jsonify({"error": f"User ({name}) not found."}), 404
+
+
+@app.route("/get/all", methods=["GET"])
+def get_all_users():
+    """
+    get all users from the database.
+    :return: (json) object of all users.
+    """
     users = User.query.all()
     excel_data = []
 
     for user in users:
         excel_data.append(user.to_dict())
 
-    return jsonify({"message": excel_data})
+    return jsonify({"message": excel_data}), 200
 
 
 def add_person(person: UserValidation):
@@ -101,18 +137,7 @@ def validate_data(row) -> UserValidation:
     )
 
     user.model_validate(user)
-
-    print(user)
-
     return user
-
-
-def load_file() -> str:
-    """
-
-    :return:
-    """
-    pass
 
 
 if __name__ == '__main__':
