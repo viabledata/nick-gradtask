@@ -1,4 +1,3 @@
-from validators.user_validation import UserValidation
 from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from openpyxl import load_workbook
@@ -12,9 +11,10 @@ database = SQLAlchemy()
 database.init_app(app)
 
 from models.user import User
+from validators.user_validation import UserValidation
 
 with app.app_context():
-    database.drop_all()
+    # database.drop_all()
     database.create_all()
 
 
@@ -29,7 +29,6 @@ def read_xl_file():
     # counter = 0
 
     # improve this file handling because dumping a larger file into memory... will not be ideal
-
     for row in range(2, sheet.max_row + 1):
         row_info = []
         for column in range(1, sheet.max_column + 1):
@@ -45,9 +44,9 @@ def read_xl_file():
         if row_info:
             try:
                 add_person(validate_data(row_info))
-            except ValueError:
+            except ValueError as error:
                 # counter = counter + 1
-                print("name contains a number ignoring it..." )
+                print(error)
                 continue
 
             # debug print
@@ -72,6 +71,12 @@ def add_person(person: UserValidation):
         first_name=person.name["first_name"],
         last_name=person.name["last_name"],
         date_of_birth=person.date_of_birth,
+        time_in=person.time_in,
+        membership_no=person.membership_no,
+        valid_from=person.valid_from,
+        valid_to=person.valid_to,
+        gender=person.gender,
+        researcher=person.researcher
     )
 
     database.session.add(new_user)
@@ -80,7 +85,7 @@ def add_person(person: UserValidation):
 
 def validate_data(row) -> UserValidation:
     """
-    pass the incoming row from the excel off to pydantic user validation/serialisation.
+    pass the incoming row from the Excel off to pydantic user validation/serialisation.
     :param row: the incoming row to be validated
     :return: the validated / serialised user.
     """
@@ -98,13 +103,6 @@ def validate_data(row) -> UserValidation:
     user.model_validate(user)
 
     print(user)
-
-    # "time_in": str(user.time_in),
-    # "membership_no": user.membership_no,
-    # "valid_from": str(user.valid_from),
-    # "valid_to": str(user.valid_to),
-    # "gender": user.gender,
-    # "researcher": user.researcher,
 
     return user
 
