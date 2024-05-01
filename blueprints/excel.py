@@ -1,11 +1,8 @@
-import os.path
+import os, app
 
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from openpyxl import load_workbook
-from pathlib import Path
-
 from app import database
-
 from models.user import User
 from validators.user_validation import UserValidation
 
@@ -18,11 +15,11 @@ def read_xl_file():
     function to read the Excel file rows and columns, validate them and insert them into the database.
     :return: (json) message stating how many rows in the Excel have been parsed, or an error message.
     """
-
-    file_path = os.path.join("static/Library_register_data.xlsx")
+    data = request.get_json()
+    file_path = os.path.join(app.Config.SPREADSHEET_DIR, data["file_path"])
 
     if not os.path.exists(file_path):
-        return jsonify({"error": f"The file of {file_path} doesn't exist."}), 404
+        return jsonify({"error": f"the file ({file_path}) doesn't exist."}), 404
 
     library_register = load_workbook(file_path)
     sheet = library_register.active
