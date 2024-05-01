@@ -4,3 +4,4 @@ instance
 .coverage
 
 static
+tests/data
