@@ -16,6 +16,14 @@ def test_get_by_name(app, client, valid_user, json_user):
         assert response.json["message"] == json_user
 
 
+def test_by_no_name(app, client):
+    with app.test_request_context():
+        no_name = ""
+        response = client.get(f"/get/{no_name}")
+
+        assert response.status_code == 404
+
+
 def test_get_wrong_name(app, client):
     """
     test that the application falls over correctly and returns a 404 for a user that doesn't exist.
