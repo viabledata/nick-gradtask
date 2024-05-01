@@ -25,4 +25,4 @@ Small python service using Pydantic, Flask and SQLALchemy to read a execel file.
 This project can be used with a tool like insomnia and can be accessed by visiting the avialable endpoints:
 - /read [POST] sends a POST request to Flask and reads the excel file `static/Library_register_data.xlsx`
 - /get/all [GET] sends a GET request to Flask and retrieves all users from the database.
-- /get/<name> [GET] sends a GET request to flask with a name Path Variable.
+- /get/`<name>` [GET] sends a GET request to flask with a name Path Variable.
