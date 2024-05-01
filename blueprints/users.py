@@ -1,10 +1,12 @@
 from flask import Blueprint, jsonify
+from sqlalchemy import func
+
 from models.user import User
 
 users = Blueprint("users_blueprint", __name__)
 
 
-@users.route("/get/<name>", methods=["GET"])
+@users.route("/users/<name>", methods=["GET"])
 def get_user_by_name(name: str):
     """
     get a user's information by searching for their name in the database.
@@ -13,23 +15,8 @@ def get_user_by_name(name: str):
     """
     # improve by allowing for lowercase name search using 'like' instead of just exact case.
     # split the incoming request into first and last name
-    full_name = name.split(" ")
-    first_name = full_name[0]
-    last_name = full_name[-1]
 
-    user = User()
-
-    # if both first and last name exist try querying the database for both.
-    if first_name and last_name:
-        user = User.query.filter_by(first_name=first_name, last_name=last_name).first()
-
-    # ditto but only with first name
-    if first_name:
-        user = User.query.filter_by(first_name=first_name).first()
-
-    # fall over check to see if the request only contains a last name, before returning 'user not found'
-    if not user:
-        user = User.query.filter_by(last_name=last_name).first()
+    user = User.query.filter(func.lower(User.first_name + ' ' + User.last_name).like(f"%{name.lower()}%")).first()
 
     if user:
         return jsonify({"message": user.to_dict()}), 200
@@ -37,7 +24,7 @@ def get_user_by_name(name: str):
         return jsonify({"error": f"User ({name}) not found."}), 404
 
 
-@users.route("/get/all", methods=["GET"])
+@users.route("/users", methods=["GET"])
 def get_all_users():
     """
     get all users from the database.
