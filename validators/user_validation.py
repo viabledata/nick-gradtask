@@ -42,7 +42,7 @@ class UserValidation(BaseModel):
 
     @field_validator('date_of_birth', 'valid_from', 'valid_to')
     @classmethod
-    def validate_dob(cls, incoming_date) -> datetime:
+    def validate_dates(cls, incoming_date) -> datetime:
         """
         validate incoming date/datetime formats and parses them with dateutil.
         :param incoming_date: the date to be checked
