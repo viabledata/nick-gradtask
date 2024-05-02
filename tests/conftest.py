@@ -148,7 +148,8 @@ def json_user() -> dict:
 @pytest.fixture(scope="module")
 def dummy_file_information() -> dict:
     return {
-        "file_path": "static/Library_register_data.xlsx",
+        "good_file_name": "data/Library_register_data.xlsx",
+        "bad_file_name": "no_data_in_here.xlsx",
         "file_size": 1000,
         "amount_of_rows": 80,
         "file_format": ".xlsx"
