@@ -11,4 +11,4 @@ class TestConfig:
     TESTING = True
     SQLALCHEMY_DATABASE_URI = "sqlite:///test.db"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SPREADSHEET_DIR = "tests/data"
+    SPREADSHEET_DIR = "static/data"
